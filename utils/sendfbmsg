@@ -1,0 +1,7 @@
+#!/bin/bash
+
+! hash socat && echo "[ERROR] No socat found." && exit 1
+
+printf '{"username":"%s","message":"%s"}' "$1" "$2" | \
+socat - UNIX-CONNECT:/tmp/instant_fb.sock
+

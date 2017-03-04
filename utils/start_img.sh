@@ -11,6 +11,6 @@
 # `Motion Start`
 
 # printf "start_img: `date`\n" >> /var/www/html/macros/img_testmacro.txt
-printf '{"username":"username_1","message":"baby move!!! %s"}' "`date`" | socat - UNIX-CONNECT:/tmp/instant_fb.sock
-printf '{"username":"username_2","message":"baby move!!! %s"}' "`date`" | socat - UNIX-CONNECT:/tmp/instant_fb.sock
+sendfbmsg username_1 "baby move!!!! `date`"
+sendfbmsg username_2 "baby move!!!! `date`"
 

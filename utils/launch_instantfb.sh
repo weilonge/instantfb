@@ -13,7 +13,7 @@ function getSourceDirectory {
 
 ROOTDIR=`getSourceDirectory`
 
-. ~/.nvm/nvm.sh
+! hash node && . ~/.nvm/nvm.sh
 # nvm use node
 node $ROOTDIR/../index.js $@
 
