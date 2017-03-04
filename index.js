@@ -25,6 +25,10 @@ InstantFB.prototype.login = function (credential) {
       }
 
       this._fbApi = api;
+      this._fbApi.listen((err, message) => {
+        console.log(message);
+        this._fbApi.sendMessage("You said: " + message.body, message.threadID);
+      });
       resolve();
     });
   });
@@ -57,9 +61,9 @@ InstantFB.prototype.openSocket = function (socket) {
   });
 };
 
-InstantFB.prototype.handleMessage = function (obj) {
+InstantFB.prototype.sendMessageViaUsername = function (username, message) {
   return new Promise((resolve, reject) => {
-    this._fbApi.getUserID(obj.username, (err, data) => {
+    this._fbApi.getUserID(username, (err, data) => {
       if(err){
         console.error('ERROR!', err)
         reject(err);
@@ -67,18 +71,22 @@ InstantFB.prototype.handleMessage = function (obj) {
       }
 
       var threadID = data[0].userID;
-      this._fbApi.sendMessage(obj.message, threadID, err => {
+      this._fbApi.sendMessage(message, threadID, err => {
         if (err) {
           console.error('ERROR!', err)
           reject(err);
           return;
         }
 
-        console.log('Sent message to', obj.username, obj.message);
+        console.log('Sent message to', username, message);
         resolve();
       });
     });
   });
+};
+
+InstantFB.prototype.handleMessage = function (obj) {
+  return this.sendMessageViaUsername(obj.username, obj.message);
 };
 
 if (process.argv.length < 4) {
