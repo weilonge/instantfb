@@ -1,62 +1,95 @@
-var login = require("facebook-chat-api");
+var fbLogin = require('facebook-chat-api');
 var net = require('net');
 var fs = require('fs');
+
+var InstantFB = function () {};
+
+InstantFB.prototype.init = function () {
+  return new Promise(resolve => {
+    process.on('SIGINT', () => {
+      if (this._socketServer) {
+        this._socketServer.close();
+      }
+      process.exit();
+    });
+    resolve();
+  });
+};
+
+InstantFB.prototype.login = function (credential) {
+  return new Promise((resolve, reject) => {
+    fbLogin(credential, (err, api) => {
+      if(err) {
+        reject(err);
+        return;
+      }
+
+      this._fbApi = api;
+      resolve();
+    });
+  });
+};
+
+InstantFB.prototype.openSocket = function (socket) {
+  if (fs.existsSync(socket)) {
+    fs.unlinkSync(socket);
+  }
+  return new Promise((resolve, reject) => {
+    this._socketServer = net.createServer(stream => {
+      var buffer = '';
+      stream.on('data', c => {
+        buffer += c.toString();
+      });
+      stream.on('end', () => {
+        console.log('steam ended:', buffer);
+        if (buffer === 'exit') {
+          buffer = '';
+          this._socketServer.close();
+          return;
+        }
+        var obj = JSON.parse(buffer);
+        buffer = '';
+        this.handleMessage(obj);
+      });
+    });
+    this._socketServer.listen(socket);
+    fs.chmodSync(socket, 0767);
+  });
+};
+
+InstantFB.prototype.handleMessage = function (obj) {
+  return new Promise((resolve, reject) => {
+    this._fbApi.getUserID(obj.username, (err, data) => {
+      if(err){
+        console.error('ERROR!', err)
+        reject(err);
+        return;
+      }
+
+      var threadID = data[0].userID;
+      this._fbApi.sendMessage(obj.message, threadID, err => {
+        if (err) {
+          console.error('ERROR!', err)
+          reject(err);
+          return;
+        }
+
+        console.log('Sent message to', obj.username, obj.message);
+        resolve();
+      });
+    });
+  });
+};
 
 if (process.argv.length < 4) {
   return -1;
 }
 
-var USERNAME = process.argv[2];
-var PASSWORD = process.argv[3];
-var SOCKET_FILE = '/tmp/fb_api.sock';
+const USERNAME = process.argv[2];
+const PASSWORD = process.argv[3];
 
-var fbApi;
+var fbService = new InstantFB();
 
-if (fs.existsSync(SOCKET_FILE)) {
-  fs.unlinkSync(SOCKET_FILE);
-}
-login({email: USERNAME, password: PASSWORD}, function callback (err, api) {
-  if(err) return console.error(err);
-
-  fbApi = api;
-  serverPrepare();
-});
-
-function serverPrepare() {
-  var server = net.createServer(function(stream) {
-    var buffer = '';
-    stream.on('data', function(c) {
-      console.log('data:', c.toString());
-      buffer += c.toString();
-    });
-    stream.on('end', function() {
-      console.log('steam ended:', buffer);
-      if (buffer === 'exit') {
-        buffer = '';
-        server.close();
-        return;
-      }
-      var obj = JSON.parse(buffer);
-      handleMessage(obj);
-      buffer = '';
-    });
-  });
-  server.listen(SOCKET_FILE);
-  fs.chmodSync(SOCKET_FILE, 0767);
-}
-
-function handleMessage(obj) {
-  console.log(obj);
-
-  fbApi.getUserID(obj.username, function(err, data){
-    if(err){
-      console.log("ERROR!", err)
-      return callback(null);
-    }
-    var threadID = data[0].userID;
-    fbApi.sendMessage(obj.message, threadID, function(err){
-      console.log("Sent message to", obj.username, obj.message);
-    });
-  });
-}
-
+fbService.init()
+  .then(fbService.login.bind(fbService, {email: USERNAME, password: PASSWORD}))
+  .then(fbService.openSocket.bind(fbService, '/tmp/instant_fb.sock'));
