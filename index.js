@@ -1,4 +1,5 @@
 var fbLogin = require('facebook-chat-api');
+var SwitchCrawler = require('./switch');
 var net = require('net');
 var fs = require('fs');
 
@@ -58,6 +59,7 @@ InstantFB.prototype.openSocket = function (socket) {
     });
     this._socketServer.listen(socket);
     fs.chmodSync(socket, 0767);
+    resolve();
   });
 };
 
@@ -95,9 +97,36 @@ if (process.argv.length < 4) {
 
 const USERNAME = process.argv[2];
 const PASSWORD = process.argv[3];
+const ME = process.argv[4];
 
 var fbService = new InstantFB();
 
 fbService.init()
   .then(fbService.login.bind(fbService, {email: USERNAME, password: PASSWORD}))
-  .then(fbService.openSocket.bind(fbService, '/tmp/instant_fb.sock'));
+  .then(fbService.openSocket.bind(fbService, '/tmp/instant_fb.sock'))
+  .then(() => {
+    console.log("SwitchCrawler running...");
+    function toLocalTime() {
+      let t  = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + " UTC";
+      return new Date(t).toString();
+    }
+    let PRICE_THRES = 34000;
+    SwitchCrawler.run(10000, (title, items, res) => {
+      let interestingItem = items.find(item => {
+        return item.price < PRICE_THRES && item.isFulfilledByAmazon;
+      });
+      let dateTimeStr = toLocalTime();
+      console.log(`[${dateTimeStr}] == ${title}`);
+      if(interestingItem) {
+        console.log(title);
+        console.log(interestingItem);
+        let msg = title + "\n" +
+                  interestingItem.price + "\n" +
+                  dateTimeStr + "\n" +
+                  res.request.uri.href;
+        return fbService.sendMessageViaUsername(ME, msg);
+      }
+      return Promise.resolve();
+    });
+  });
+

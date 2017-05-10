@@ -9,6 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "facebook-chat-api": "^1.2.0"
+    "crawler": "^1.0.4",
+    "facebook-chat-api": "^1.2.0",
+    "node-datetime": "^1.0.0"
   }
 }
