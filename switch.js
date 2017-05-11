@@ -19,9 +19,13 @@ SwitchCrawler.run = function (retryInterval, notifyMe) {
         let item = {};
         let priceText = $(this).find(".a-size-large.a-color-price.olpOfferPrice.a-text-bold").text();
         let fulfilledByAmazonText = $(this).find(".olpDeliveryColumn > .olpBadgeContainer > .olpBadge a.a-declarative").text().trim();
+        let seller = $(this).find(".olpSellerName > span.a-text-bold > a").text();
+
         item.price = parseInt(priceText.replace(/[￥,]/u, '').replace(/[￥,]/u, ''));
         item.textFulfilledByAmazon = fulfilledByAmazonText;
         item.isFulfilledByAmazon = !!item.textFulfilledByAmazon;
+        item.seller = seller;
+        item.isAmazonJP = item.seller.includes("Amazon");
         items.push(item);
       });
       notifyMe(title, items, res).then(() => {
@@ -29,7 +33,7 @@ SwitchCrawler.run = function (retryInterval, notifyMe) {
       });
     }
   });
-  
+
   c.on('drain', () => {
     c.queue(SwitchCrawler.tasks);
   });

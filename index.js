@@ -122,6 +122,7 @@ fbService.init()
         console.log(interestingItem);
         let msg = title + "\n" +
                   interestingItem.price + "\n" +
+                  interestingItem.seller + "[" + interestingItem.isAmazonJP + "]\n" +
                   dateTimeStr + "\n" +
                   res.request.uri.href;
         return fbService.sendMessageViaUsername(ME, msg);
