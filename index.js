@@ -1,5 +1,6 @@
 var fbLogin = require('facebook-chat-api');
 var SwitchCrawler = require('./switch');
+var SwitchOfficialCrawler = require('./switchOfficial');
 var net = require('net');
 var fs = require('fs');
 
@@ -111,7 +112,7 @@ fbService.init()
       return new Date(t).toString();
     }
     let PRICE_THRES = 36000;
-    SwitchCrawler.run(8000, (title, items, res) => {
+    SwitchCrawler.run(2000, (title, items, res) => {
       let interestingItem = items.find(item => {
         return item.price < PRICE_THRES && item.isFulfilledByAmazon;
       });
@@ -126,6 +127,28 @@ fbService.init()
                   dateTimeStr + "\n" +
                   res.request.uri.href;
         return fbService.sendMessageViaUsername(ME, msg);
+      }
+      return Promise.resolve();
+    });
+  })
+  .then(() => {
+    const NO_OFFICIAL = true;
+    if (NO_OFFICIAL) {
+      return;
+    }
+    console.log("SwitchOfficialCrawler running...");
+    function toLocalTime() {
+      let t  = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + " UTC";
+      return new Date(t).toString();
+    }
+    SwitchOfficialCrawler.run(1000, (title, items, res) => {
+      let dateTimeStr = toLocalTime();
+      console.log(`[${dateTimeStr}] == ${title}`);
+      if(title != "エラー") {
+        console.log(title);
+        return fbService.sendMessageViaUsername(ME, title + " Ready to buy in official store: https://store.nintendo.co.jp/customize.html");
+      } else {
+        console.log("[OFFICIAL] under construction");
       }
       return Promise.resolve();
     });
