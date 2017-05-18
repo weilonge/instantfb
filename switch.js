@@ -3,8 +3,14 @@ var Crawler = require("crawler");
 var SwitchCrawler = {};
 
 SwitchCrawler.tasks = [
-  'https://www.amazon.co.jp/gp/offer-listing/B01NCXFWIZ/ref=olp_f_freeShipping?ie=UTF8&f_new=true',
-  'https://www.amazon.co.jp/gp/offer-listing/B01N5QLLT3/ref=dp_olp_new?ie=UTF8&condition=new',
+  'https://www.amazon.co.jp/gp/offer-listing/B01NCXFWIZ/', // color
+  'https://www.amazon.co.jp/gp/offer-listing/B01N5QLLT3/', // normal
+  'https://www.amazon.co.jp/gp/offer-listing/B01N5QLOHD/', // color + screen
+  'https://www.amazon.co.jp/gp/offer-listing/B01NBW07L4/', // normal + screen
+  'https://www.amazon.co.jp/gp/offer-listing/B01N356LAU/', // color + black case
+  'https://www.amazon.co.jp/gp/offer-listing/B01NCX1VU6/', // normal + black case
+  'https://www.amazon.co.jp/gp/offer-listing/B01N9SYM66/', // color + blue case
+  'https://www.amazon.co.jp/gp/offer-listing/B01NAU8B71/', // normal + blue case
 ];
 
 SwitchCrawler.run = function (retryInterval, notifyMe) {

@@ -110,8 +110,8 @@ fbService.init()
       let t  = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + " UTC";
       return new Date(t).toString();
     }
-    let PRICE_THRES = 34000;
-    SwitchCrawler.run(10000, (title, items, res) => {
+    let PRICE_THRES = 36000;
+    SwitchCrawler.run(8000, (title, items, res) => {
       let interestingItem = items.find(item => {
         return item.price < PRICE_THRES && item.isFulfilledByAmazon;
       });
