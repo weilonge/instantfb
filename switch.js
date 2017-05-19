@@ -3,6 +3,7 @@ var Crawler = require("crawler");
 var SwitchCrawler = {};
 
 SwitchCrawler.tasks = [
+  'https://www.amazon.co.jp/gp/offer-listing/B01NBWQWTF/', // lowest
   'https://www.amazon.co.jp/gp/offer-listing/B01NCXFWIZ/', // color
   'https://www.amazon.co.jp/gp/offer-listing/B01N5QLLT3/', // normal
   'https://www.amazon.co.jp/gp/offer-listing/B01N5QLOHD/', // color + screen
