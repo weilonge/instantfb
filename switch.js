@@ -3,15 +3,15 @@ var Crawler = require("crawler");
 var SwitchCrawler = {};
 
 SwitchCrawler.tasks = [
-  'https://www.amazon.co.jp/gp/offer-listing/B01NBWQWTF/', // lowest
-  'https://www.amazon.co.jp/gp/offer-listing/B01NCXFWIZ/', // color
-  'https://www.amazon.co.jp/gp/offer-listing/B01N5QLLT3/', // normal
-  'https://www.amazon.co.jp/gp/offer-listing/B01N5QLOHD/', // color + screen
-  'https://www.amazon.co.jp/gp/offer-listing/B01NBW07L4/', // normal + screen
-  'https://www.amazon.co.jp/gp/offer-listing/B01N356LAU/', // color + black case
-  'https://www.amazon.co.jp/gp/offer-listing/B01NCX1VU6/', // normal + black case
-  'https://www.amazon.co.jp/gp/offer-listing/B01N9SYM66/', // color + blue case
-  'https://www.amazon.co.jp/gp/offer-listing/B01NAU8B71/', // normal + blue case
+  'https://www.amazon.co.jp/gp/offer-listing/B01NBWQWTF/?f_new=true', // lowest
+  'https://www.amazon.co.jp/gp/offer-listing/B01NCXFWIZ/?f_new=true', // color
+  'https://www.amazon.co.jp/gp/offer-listing/B01N5QLLT3/?f_new=true', // normal
+  'https://www.amazon.co.jp/gp/offer-listing/B01N5QLOHD/?f_new=true', // color + screen
+  'https://www.amazon.co.jp/gp/offer-listing/B01NBW07L4/?f_new=true', // normal + screen
+  'https://www.amazon.co.jp/gp/offer-listing/B01N356LAU/?f_new=true', // color + black case
+  'https://www.amazon.co.jp/gp/offer-listing/B01NCX1VU6/?f_new=true', // normal + black case
+  'https://www.amazon.co.jp/gp/offer-listing/B01N9SYM66/?f_new=true', // color + blue case
+  'https://www.amazon.co.jp/gp/offer-listing/B01NAU8B71/?f_new=true', // normal + blue case
 ];
 
 SwitchCrawler.run = function (retryInterval, notifyMe) {
