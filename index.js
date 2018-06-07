@@ -1,20 +1,19 @@
-var fbLogin = require('facebook-chat-api');
-var net = require('net');
-var fs = require('fs');
+const fbLogin = require('facebook-chat-api');
+const net = require('net');
+const fs = require('fs');
 
-var InstantFB = function () {};
+let InstantFB = function () {};
 
 InstantFB.prototype.init = function () {
-  return new Promise(resolve => {
-    process.on('SIGINT', () => {
-      if (this._socketServer) {
-        this._socketServer.close();
-      }
-      process.exit();
-    });
-    resolve();
-  });
+  process.on('SIGINT', this.exit.bind(this));
 };
+
+InstantFB.prototype.exit = function () {
+  if (this._socketServer) {
+    this._socketServer.close();
+  }
+  process.exit();
+}
 
 InstantFB.prototype.login = function (credential) {
   return new Promise((resolve, reject) => {
@@ -25,10 +24,7 @@ InstantFB.prototype.login = function (credential) {
       }
 
       this._fbApi = api;
-      this._fbApi.listen((err, message) => {
-        console.log(message);
-        this._fbApi.sendMessage("You said: " + message.body, message.threadID);
-      });
+      this._fbApi.listen(this.handleFacebookMessage.bind(this));
       resolve();
     });
   });
@@ -40,20 +36,14 @@ InstantFB.prototype.openSocket = function (socket) {
   }
   return new Promise((resolve, reject) => {
     this._socketServer = net.createServer(stream => {
-      var buffer = '';
+      let buffer = '';
       stream.on('data', c => {
         buffer += c.toString();
       });
       stream.on('end', () => {
         console.log('steam ended:', buffer);
-        if (buffer === 'exit') {
-          buffer = '';
-          this._socketServer.close();
-          return;
-        }
-        var obj = JSON.parse(buffer);
+        this.handleSocketMessage(buffer);
         buffer = '';
-        this.handleMessage(obj);
       });
     });
     this._socketServer.listen(socket);
@@ -61,7 +51,7 @@ InstantFB.prototype.openSocket = function (socket) {
   });
 };
 
-InstantFB.prototype.sendMessageViaUsername = function (username, message) {
+InstantFB.prototype.sendMessageByUsername = function (username, message) {
   return new Promise((resolve, reject) => {
     this._fbApi.getUserID(username, (err, data) => {
       if(err){
@@ -70,34 +60,63 @@ InstantFB.prototype.sendMessageViaUsername = function (username, message) {
         return;
       }
 
-      var threadID = data[0].userID;
-      this._fbApi.sendMessage(message, threadID, err => {
-        if (err) {
-          console.error('ERROR!', err)
-          reject(err);
-          return;
-        }
-
-        console.log('Sent message to', username, message);
-        resolve();
-      });
+      resolve(data[0].userID);
     });
+  }).then(threadID => {
+    return this.sendMessageByThreadID(threadID, message);
   });
 };
 
-InstantFB.prototype.handleMessage = function (obj) {
-  return this.sendMessageViaUsername(obj.username, obj.message);
-};
-
-if (process.argv.length < 4) {
-  return -1;
+InstantFB.prototype.sendMessageByThreadID = function (threadID, message) {
+  return new Promise((resolve, reject) => {
+    this._fbApi.sendMessage(message, threadID, err => {
+      if (err) {
+        console.error('ERROR!', err)
+        reject(err);
+        return;
+      }
+      resolve();
+    });
+  });
 }
 
-const USERNAME = process.argv[2];
-const PASSWORD = process.argv[3];
+InstantFB.prototype.handleSocketMessage = function (rawBody) {
+  const commandObject = JSON.parse(rawBody);
+  switch (commandObject.type) {
+    case 'sendMessage': {
+      return this.sendMessageByUsername(commandObject.username, commandObject.message);
+    }
+    case 'exit': {
+      this.exit();
+      return Promise.resolve();
+    }
+  }
+};
 
-var fbService = new InstantFB();
+InstantFB.prototype.handleFacebookMessage = function (err, event) {
+  console.log(event);
+  switch (event.type) {
+    case 'message': {
+      this.sendMessageByThreadID(event.threadID, "You said: " + event.body);
+      break;
+    }
+  }
+};
 
-fbService.init()
-  .then(fbService.login.bind(fbService, {email: USERNAME, password: PASSWORD}))
-  .then(fbService.openSocket.bind(fbService, '/tmp/instant_fb.sock'));
+(async () => {
+  if (process.argv.length < 4) {
+    return -1;
+  }
+
+  const USERNAME = process.argv[2];
+  const PASSWORD = process.argv[3];
+
+  let fbService = new InstantFB();
+  await fbService.init();
+  await fbService.login({
+    email: USERNAME,
+    password: PASSWORD,
+  });
+  await fbService.openSocket('/tmp/instant_fb.sock');
+})();
+
